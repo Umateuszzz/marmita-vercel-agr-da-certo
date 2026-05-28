@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Administrativo - Marmita Express</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --color-primary: #FF8C69; --color-primary-dark: #FF7043; --color-bg: #F3F4F6; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: var(--color-bg); color: #1F2937; }
+        .admin-header { background: #fff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .brand h1 { color: var(--color-primary-dark); font-size: 1.5rem; }
+        .btn-acao { text-decoration: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 0.95rem; }
+        .btn-view { background: #EEF2FF; color: #4F46E5; }
+        .container { max-width: 1300px; margin: 30px auto; padding: 0 20px; }
+        
+        .section-box { background: #fff; border-radius: 12px; padding: 25px; margin-bottom: 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .section-box h2 { border-bottom: 1px solid #E5E7EB; padding-bottom: 15px; margin-bottom: 20px; font-size: 1.4rem; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 16px; border-bottom: 1px solid #E5E7EB; text-align: left; vertical-align: top;}
+        th { background: #F9FAFB; color: #6B7280; font-weight: 600; }
+        .btn-update { background: var(--color-primary); color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-delete { background: #DC2626; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        
+        /* Formulário Produto */
+        .form-produto { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; align-items: end; background: #F9FAFB; padding: 20px; border-radius: 8px; border: 1px dashed #D1D5DB; }
+        .form-group { display: flex; flex-direction: column; flex: 1; min-width: 200px;}
+        .form-group label { font-size: 0.9rem; font-weight: bold; margin-bottom: 5px;}
+        .form-group input, .form-group select { padding: 10px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 1rem;}
+        .btn-add { background: #10B981; color: white; padding: 10px 20px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; height: 41px;}
+
+        /* Badges */
+        .badge { padding: 5px 10px; border-radius: 6px; font-size: 0.85rem; font-weight: bold; display: inline-block; text-transform: uppercase; }
+        .tamanho { background: #E0F2FE; color: #0369A1; }
+        .feijao { background: #FEF3C7; color: #92400E; }
+        .massa { background: #DCFCE7; color: #15803D; }
+        .legumes { background: #FAE8FF; color: #A21CAF; }
+        .outros { background: #F3E8FF; color: #6B21A8; }
+        .salada { background: #FFE4E6; color: #E11D48; }
+        .proteina { background: #FCE7F3; color: #BE123C; }
+    </style>
+</head>
+<body>
+
+    <header class="admin-header">
+        <div class="brand"><h1>⚙️ Painel de Gestão (Supabase)</h1></div>
+        <div>
+            <a href="index.html" class="btn-acao btn-view" target="_blank">Ver Loja</a>
+            <a href="logout.html" class="btn-acao" style="background:#FEE2E2;color:#DC2626;margin-left:10px;">Sair</a>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="section-box">
+            <h2>🛒 Gestão do Cardápio (Itens da Marmita)</h2>
+            
+            <form id="formAddProduto" class="form-produto">
+                <div class="form-group">
+                    <label>Nome do Item</label>
+                    <input type="text" id="prodNome" placeholder="Ex: Feijão Tropeiro, Jiló..." required>
+                </div>
+                <div class="form-group">
+                    <label>Seção do Cardápio</label>
+                    <select id="prodCategoria" required>
+                        <option value="tamanho">1. Tamanho da Marmita</option>
+                        <option value="feijao">2. Feijão</option>
+                        <option value="massa">3. Massa</option>
+                        <option value="legumes">4. Legumes</option>
+                        <option value="outros">5. Outros (Torresmo, Fritas...)</option>
+                        <option value="salada">6. Salada</option>
+                        <option value="proteina">7. Carne (Proteína)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Preço Adicional (R$)</label>
+                    <input type="number" step="0.01" id="prodPreco" value="0.00" required>
+                </div>
+                <button type="submit" class="btn-add">➕ Adicionar Item</button>
+            </form>
+
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead><tr><th>ID</th><th>Nome do Item</th><th>Categoria</th><th>Preço</th><th>Ação</th></tr></thead>
+                    <tbody id="tabelaProdutos"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="section-box">
+            <h2>📝 Registro de Pedidos</h2>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead><tr><th>Cód</th><th>Cliente</th><th>Pedido</th><th>Total</th><th>Status</th></tr></thead>
+                    <tbody id="tabelaPedidos"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // CONFIGURAÇÃO DO SUPABASE (Substitua com os seus dados reais)
+        const SUPABASE_URL = "https://qmrrdiwmaakcullmpwgi.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtcnJkaXdtYWFrY3VsbG1wd2dpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3ODgwNTUsImV4cCI6MjA5NTM2NDA1NX0.6nSW2ybFroPWlly6mmwwsbe1ym-hqdfe42PZy0a_MnQ";
+        
+        const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const nomesCategorias = {
+            'tamanho': 'Tamanho', 'feijao': 'Feijão', 'massa': 'Massa',
+            'legumes': 'Legumes', 'outros': 'Outros', 'salada': 'Salada', 'proteina': 'Carne (Proteína)'
+        };
+
+        // Proteção de acesso - redireciona para login se não autenticado
+        if (!sessionStorage.getItem("admin_logado")) {
+            window.location.href = "login.html";
+        }
+
+        // Carregar dados ao abrir a página
+        window.onload = async () => {
+            carregarProdutos();
+            carregarPedidos();
+        };
+
+        // --- FUNÇÕES DO CARDÁPIO ---
+        async function carregarProdutos() {
+            const { data: produtos, error } = await sbClient.from('produtos').select('*').order('categoria').order('nome');
+            if (error) return console.error(error);
+
+            const tbody = document.getElementById('tabelaProdutos');
+            tbody.innerHTML = '';
+            
+            produtos.forEach(p => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>#${p.id}</td>
+                        <td><strong>${p.nome}</strong></td>
+                        <td><span class="badge ${p.categoria}">${nomesCategorias[p.categoria] || p.categoria}</span></td>
+                        <td>${p.preco > 0 ? 'R$ ' + parseFloat(p.preco).toFixed(2).replace('.', ',') : '<span style="color:#888;">Incluso</span>'}</td>
+                        <td><button class="btn-delete" onclick="excluirProduto(${p.id})">Excluir</button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        document.getElementById('formAddProduto').onsubmit = async (e) => {
+            e.preventDefault();
+            const nome = document.getElementById('prodNome').value;
+            const categoria = document.getElementById('prodCategoria').value;
+            const preco = parseFloat(document.getElementById('prodPreco').value);
+
+            const { error } = await sbClient.from('produtos').insert([{ nome, categoria, preco }]);
+            if (error) alert("Erro ao salvar!");
+            else {
+                document.getElementById('formAddProduto').reset();
+                carregarProdutos();
+            }
+        };
+
+        async function excluirProduto(id) {
+            if(confirm("Tem certeza que deseja excluir?")) {
+                await sbClient.from('produtos').delete().eq('id', id);
+                carregarProdutos();
+            }
+        }
+
+        // --- FUNÇÕES DOS PEDIDOS ---
+        async function carregarPedidos() {
+            const { data: pedidos, error } = await sbClient.from('pedidos').select('*').order('criado_em', { ascending: false });
+            if (error) return console.error(error);
+
+            const tbody = document.getElementById('tabelaPedidos');
+            tbody.innerHTML = '';
+
+            pedidos.forEach(p => {
+                // Monta a lista de itens alimentares vindos do JSONB
+                let itensHTML = '<ul style="padding-left:15px; font-size: 0.9rem;">';
+                if(Array.isArray(p.itens)) {
+                    p.itens.forEach(item => { itensHTML += `<li>${item}</li>`; });
+                }
+                itensHTML += '</ul>';
+
+                const dataFormatada = new Date(p.criado_em).toLocaleDateString('pt-BR');
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>#${p.codigo}</strong><br><small>${dataFormatada}</small></td>
+                        <td>${p.cliente_name}<br><small>${p.cliente_telefone}</small></td>
+                        <td>${itensHTML}</td>
+                        <td><strong>R$ ${parseFloat(p.total).toFixed(2).replace('.', ',')}</strong></td>
+                        <td>
+                            <div style="display:flex; gap: 5px;">
+                                <select id="status-${p.id}" style="padding: 6px; border-radius: 6px; border: 1px solid #ddd;">
+                                    <option value="Novo" ${p.status === 'Novo' ? 'selected' : ''}>Novo</option>
+                                    <option value="Aceito" ${p.status === 'Aceito' ? 'selected' : ''}>Aceito</option>
+                                    <option value="Em preparo" ${p.status === 'Em preparo' ? 'selected' : ''}>Em preparo</option>
+                                    <option value="Saiu para entrega" ${p.status === 'Saiu para entrega' ? 'selected' : ''}>Saiu</option>
+                                    <option value="Entregue" ${p.status === 'Entregue' ? 'selected' : ''}>Entregue</option>
+                                    <option value="Cancelado" ${p.status === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
+                                </select>
+                                <button class="btn-update" onclick="atualizarStatus(${p.id})">✔</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function atualizarStatus(id) {
+            const novoStatus = document.getElementById(`status-${id}`).value;
+            const { error } = await sbClient.from('pedidos').update({ status: novoStatus }).eq('id', id);
+            if (error) alert("Erro ao atualizar status");
+            else alert("Status atualizado!");
+        }
+    </script>
+</body>
+</html>
