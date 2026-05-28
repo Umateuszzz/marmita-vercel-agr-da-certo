@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monte sua Marmita - Delivery</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        :root {
+            --color-bg: #F9FAFB;
+            --color-white: #FFFFFF;
+            --color-primary: #FF8C69;
+            --color-primary-dark: #FF7043;
+            --color-text: #2F2F2F;
+            --color-text-muted: #6B7280;
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 10px 15px -3px rgba(255, 112, 67, 0.2);
+            --radius-md: 16px;
+            --radius-pill: 50px;
+            --transition: all 0.25s ease-in-out;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+        body { background-color: var(--color-bg); color: var(--color-text); line-height: 1.5; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .header-internal { background-color: var(--color-white); box-shadow: var(--shadow-sm); padding: 15px 0; position: sticky; top: 0; z-index: 100; }
+        .header-content { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 24px; font-weight: 800; color: var(--color-primary-dark); cursor: pointer; }
+        .badge-status { background-color: #E6F4EA; color: #137333; padding: 6px 16px; border-radius: var(--radius-pill); font-size: 0.85rem; font-weight: 700; }
+        .page-montar { display: grid; grid-template-columns: 1.7fr 1.3fr; gap: 40px; margin-top: 40px; margin-bottom: 80px; }
+        .section-title h2 { font-size: 2.2rem; font-weight: 800; color: var(--color-text); margin-bottom: 5px; }
+        .section-title p { color: var(--color-text-muted); font-size: 1.05rem; }
+        .step { background: var(--color-white); padding: 30px; border-radius: var(--radius-md); margin-top: 30px; box-shadow: var(--shadow-sm); border: 1px solid rgba(0,0,0,0.02); }
+        .step h3 { font-size: 1.25rem; color: var(--color-text); margin-bottom: 10px; display: flex; align-items: center; gap: 12px; font-weight: 700; }
+        .step p.limite-info { font-size: 0.85rem; color: var(--color-primary-dark); font-weight: 600; margin-bottom: 20px; margin-left: 42px; }
+        .step-num { background-color: var(--color-primary-dark); color: var(--color-white); width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 0.95rem; font-weight: 700; }
+        .options-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 16px; }
+        
+        .item-btn { background: var(--color-white); border: 2px solid #E5E7EB; padding: 24px 16px; border-radius: var(--radius-md); cursor: pointer; transition: var(--transition); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 6px; }
+        .item-btn * { pointer-events: none; }
+        .item-btn:hover { border-color: var(--color-primary); background-color: #FFF8F6; transform: translateY(-2px); }
+        .item-btn.selected { border-color: var(--color-primary-dark); background-color: #FFF2EE; box-shadow: 0 4px 12px rgba(255, 112, 67, 0.12); }
+        .item-icon { font-size: 2.2rem; margin-bottom: 4px; }
+        .item-name { font-weight: 700; font-size: 1rem; color: var(--color-text); }
+        .item-price { font-size: 0.85rem; color: var(--color-text-muted); font-weight: 600; }
+        
+        .cart-card { background: var(--color-white); padding: 30px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border: 1px solid rgba(0,0,0,0.02); position: sticky; top: 90px; }
+        .cart-card h2 { font-size: 1.6rem; font-weight: 800; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid var(--color-bg); }
+        .empty-cart { color: var(--color-text-muted); font-size: 0.95rem; text-align: center; padding: 20px 0; }
+        .cart-totals { margin-top: 25px; background-color: var(--color-bg); padding: 20px; border-radius: var(--radius-md); }
+        .total-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 1rem; color: var(--color-text-muted); }
+        .total-row.highlight { margin-top: 15px; padding-top: 15px; border-top: 2px dashed #E5E7EB; font-size: 1.4rem; font-weight: 800; color: var(--color-primary-dark); }
+        .checkout-form { margin-top: 30px; }
+        .checkout-form h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 15px; }
+        .form-input { width: 100%; padding: 14px 16px; margin-bottom: 14px; border: 1px solid #E5E7EB; border-radius: 10px; font-size: 0.95rem; transition: var(--transition); background-color: #F9FAFB; }
+        .form-input:focus { outline: none; border-color: var(--color-primary); background-color: var(--color-white); box-shadow: 0 0 0 3px rgba(255, 140, 105, 0.15); }
+        textarea.form-input { min-height: 90px; resize: vertical; }
+        .btn-whatsapp { width: 100%; background: linear-gradient(135deg, #25D366, #128C7E); color: white; border: none; padding: 18px; border-radius: 10px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: var(--transition); display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .btn-whatsapp:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(37, 211, 102, 0.3); }
+        .btn-whatsapp:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        @media (max-width: 992px) { .page-montar { grid-template-columns: 1fr; } .cart-card { position: relative; top: 0; } }
+        @media (max-width: 480px) { .options-grid { grid-template-columns: 1fr 1fr; } }
+    </style>
+</head>
+<body>
+
+    <header class="header-internal">
+        <div class="container header-content">
+            <div class="logo" onclick="window.location.href='index.html'">Marmita Express</div>
+            <div class="info">
+                <span class="badge-status">Aberto para Pedidos</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="container page-montar">
+        
+        <section class="menu-section" id="monte-sua-marmita">
+            <div class="section-title">
+                <h2>Monte Seu Marmitex</h2>
+                <p>Arroz já acompanha todas as opções! 🍚</p>
+            </div>
+            
+            <div class="step">
+                <h3><span class="step-num">1</span> Escolha o Tamanho</h3>
+                <p class="limite-info">Selecione apenas 1 tamanho</p>
+                <div id="grid-tamanho" class="options-grid"></div>
+            </div>
+
+            <div class="step">
+                <h3><span class="step-num">2</span> Feijão</h3>
+                <p class="limite-info">Escolha apenas 1 opção</p>
+                <div id="grid-feijao" class="options-grid"></div>
+            </div>
+
+            <div class="step">
+                <h3><span class="step-num">3</span> Massa</h3>
+                <p class="limite-info">Escolha apenas 1 opção</p>
+                <div id="grid-massa" class="options-grid"></div>
+            </div>
+
+            <div class="step">
+                <h3><span class="step-num">4</span> Legumes</h3>
+                <p class="limite-info">Escolha apenas 1 opção</p>
+                <div id="grid-legumes" class="options-grid"></div>
+            </div>
+
+            <div class="step">
+                <h3><span class="step-num">5</span> Outros</h3>
+                <p class="limite-info">Escolha até 2 opções</p>
+                <div id="grid-outros" class="options-grid"></div>
+            </div>
+
+            <div class="step">
+                <h3><span class="step-num">6</span> Salada</h3>
+                <p class="limite-info">Escolha até 2 opções</p>
+                <div id="grid-salada" class="options-grid"></div>
+            </div>
+
+            <div class="step">
+                <h3><span class="step-num">7</span> Opção de Carne</h3>
+                <p class="limite-info">Escolha apenas 1 tipo de carne</p>
+                <div id="grid-proteina" class="options-grid"></div>
+            </div>
+        </section>
+
+        <aside class="cart-section">
+            <div class="cart-card">
+                <h2>Seu Pedido</h2>
+                <div id="cart-items" class="cart-items-list">
+                    <p class="empty-cart">Selecione os itens ao lado para montar sua marmita.</p>
+                </div>
+                
+                <div class="cart-totals">
+                    <div class="total-row">
+                        <span>Subtotal</span>
+                        <span id="subtotal">R$ 0,00</span>
+                    </div>
+                    <div class="total-row">
+                        <span>Taxa de Entrega</span>
+                        <span id="delivery-fee">R$ 3,00</span>
+                    </div>
+                    <div class="total-row highlight">
+                        <span>Total</span>
+                        <span id="total">R$ 0,00</span>
+                    </div>
+                </div>
+
+                <div class="checkout-form">
+                    <h3>Dados para Entrega</h3>
+                    <input type="text" id="c-nome" class="form-input" placeholder="Seu Nome Completo" required>
+                    <input type="text" id="c-telefone" class="form-input" placeholder="Telefone/WhatsApp" required>
+                    
+                    <select id="c-tipo" class="form-input">
+                        <option value="delivery" selected>Delivery</option>
+                        <option value="retirada">Retirada no Local</option>
+                    </select>
+
+                    <div id="box-regiao">
+                        <select id="c-regiao" class="form-input">
+                            <option value="dentro" selected>Dentro da Cidade (Taxa R$ 3,00)</option>
+                            <option value="fora">Fora da Cidade (Cana Verde) (Taxa R$ 6,00)</option>
+                        </select>
+                    </div>
+
+                    <input type="text" id="c-endereco" class="form-input" placeholder="Endereço, Bairro, Número">
+                    
+                    <h3 style="margin-top: 15px;">Pagamento</h3>
+                    <select id="c-pagamento" class="form-input">
+                        <option value="">Selecione a forma de pagamento...</option>
+                        <option value="PIX">PIX (Gerar QR Code na Tela)</option>
+                        <option value="Cartão">Máquina de Cartão (na entrega)</option>
+                        <option value="Dinheiro">Dinheiro</option>
+                    </select>
+
+                    <div id="box-troco" style="display: none; margin-bottom: 14px;">
+                        <input type="text" id="c-troco" class="form-input" placeholder="Precisa de troco para quanto? (Ex: 50)">
+                    </div>
+
+                    <textarea id="c-obs" class="form-input" placeholder="Observações do pedido..."></textarea>
+                    
+                    <button type="button" id="btn-finish" class="btn-whatsapp">
+                        <span class="icon">💬</span> Finalizar Pedido
+                    </button>
+                </div>
+            </div>
+        </aside>
+        
+    </main>
+
+    <script>
+        // CONFIGURAÇÃO DO SUPABASE (Substitua pelas suas chaves reais)
+        const SUPABASE_URL = "https://qmrrdiwmaakcullmpwgi.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtcnJkaXdtYWFrY3VsbG1wd2dpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3ODgwNTUsImV4cCI6MjA5NTM2NDA1NX0.6nSW2ybFroPWlly6mmwwsbe1ym-hqdfe42PZy0a_MnQ";
+        
+        const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const icones = {
+            'tamanho': '🍱', 'feijao': '🫘', 'massa': '🍝',
+            'legumes': '🥦', 'outros': '🍿', 'salada': '🥗', 'proteina': '🥩'
+        };
+
+        const LIMITES = {
+            tamanho: 1, feijao: 1, massa: 1, legumes: 1, outros: 2, salada: 2, proteina: 1
+        };
+
+        const cart = { 
+            tamanho: null, feijao: [], massa: [], legumes: [], outros: [], salada: [], proteina: [], 
+            subtotal: 0, taxaEntrega: 3.00 
+        };
+
+        // 1. CARREGAR OS ITENS DO SUPABASE AO ENTRAR NA PÁGINA
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Mostra estado de carregamento em todos os grids
+            const grids = ['tamanho','feijao','massa','legumes','outros','salada','proteina'];
+            grids.forEach(g => {
+                const el = document.getElementById(`grid-${g}`);
+                if (el) el.innerHTML = '<p style="color:#9CA3AF;font-size:0.85rem;padding:8px 0;">Carregando...</p>';
+            });
+
+            const { data: produtos, error } = await sbClient.from('produtos').select('*').order('id', { ascending: true });
+
+            if (error || !produtos) {
+                console.error("Erro ao carregar cardápio:", error);
+                // Mostra mensagem de erro visível para o usuário
+                const section = document.getElementById('monte-sua-marmita');
+                if (section) {
+                    section.innerHTML = `
+                        <div style="background:#FEF2F2;border:1px solid #FCA5A5;border-radius:12px;padding:24px;text-align:center;margin-top:20px;">
+                            <p style="font-size:1.1rem;font-weight:700;color:#DC2626;">⚠️ Não foi possível carregar o cardápio.</p>
+                            <p style="color:#6B7280;margin-top:8px;font-size:0.9rem;">
+                                Verifique se o banco de dados do Supabase está configurado corretamente e se as tabelas foram criadas.<br>
+                                Consulte o arquivo <strong>database.sql</strong> incluído no projeto.
+                            </p>
+                            <p style="color:#9CA3AF;margin-top:6px;font-size:0.8rem;">Erro técnico: ${error?.message || 'resposta vazia'}</p>
+                        </div>`;
+                }
+                return;
+            }
+
+            if (produtos.length === 0) {
+                const section = document.getElementById('monte-sua-marmita');
+                if (section) {
+                    section.innerHTML = `
+                        <div style="background:#FFFBEB;border:1px solid #FCD34D;border-radius:12px;padding:24px;text-align:center;margin-top:20px;">
+                            <p style="font-size:1.1rem;font-weight:700;color:#92400E;">📋 Nenhum item cadastrado no cardápio ainda.</p>
+                            <p style="color:#6B7280;margin-top:8px;font-size:0.9rem;">Acesse o painel admin para adicionar itens ao cardápio.</p>
+                        </div>`;
+                }
+                return;
+            }
+
+            // Limpa o estado de carregamento
+            grids.forEach(g => {
+                const el = document.getElementById(`grid-${g}`);
+                if (el) el.innerHTML = '';
+            });
+
+            // Distribui os botões dinamicamente em cada grid com base na categoria
+            produtos.forEach(item => {
+                const grid = document.getElementById(`grid-${item.categoria}`);
+                if (grid) {
+                    const precoTexto = item.preco > 0 ? `+ R$ ${parseFloat(item.preco).toFixed(2).replace('.', ',')}` : '';
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'item-btn';
+                    btn.dataset.type = item.categoria;
+                    btn.dataset.name = item.nome;
+                    btn.dataset.price = item.preco;
+
+                    btn.innerHTML = `
+                        <span class="item-icon">${icones[item.categoria] || '🍛'}</span>
+                        <span class="item-name">${item.nome}</span>
+                        ${precoTexto ? `<span class="item-price">${precoTexto}</span>` : ''}
+                    `;
+
+                    // Vincula o evento de clique diretamente no novo botão
+                    btn.addEventListener('click', gerenciarCliqueBotao);
+                    grid.appendChild(btn);
+                }
+            });
+        });
+
+        // 2. GERENCIAR SELEÇÕES E LIMITES
+        function gerenciarCliqueBotao(e) {
+            const targetBtn = e.currentTarget;
+            const type = targetBtn.dataset.type;
+            const name = targetBtn.dataset.name;
+            const price = parseFloat(targetBtn.dataset.price);
+
+            if(type === 'tamanho') {
+                document.querySelectorAll(`.item-btn[data-type="tamanho"]`).forEach(b => b.classList.remove('selected'));
+                targetBtn.classList.add('selected');
+                cart.tamanho = { name, price };
+            } else {
+                const indexExistente = cart[type].findIndex(item => item.name === name);
+
+                if(indexExistente > -1) {
+                    targetBtn.classList.remove('selected');
+                    cart[type].splice(indexExistente, 1);
+                } else {
+                    if (LIMITES[type] === 1) {
+                        document.querySelectorAll(`.item-btn[data-type="${type}"]`).forEach(b => b.classList.remove('selected'));
+                        cart[type] = [];
+                        targetBtn.classList.add('selected');
+                        cart[type].push({ name, price });
+                    } else {
+                        if (cart[type].length >= LIMITES[type]) {
+                            alert(`Você pode escolher no máximo ${LIMITES[type]} opções na seção de ${type.toUpperCase()}.`);
+                            return;
+                        }
+                        targetBtn.classList.add('selected');
+                        cart[type].push({ name, price });
+                    }
+                }
+            }
+            updateCart();
+        }
+
+        // 3. ATUALIZAR O CARRINHO NA TELA
+        function updateCart() {
+            const cartItemsDiv = document.getElementById('cart-items');
+            cartItemsDiv.innerHTML = '';
+            cart.subtotal = 0;
+            let hasItems = false;
+
+            if(cart.tamanho) {
+                cartItemsDiv.innerHTML += `<p><b>Tamanho:</b> ${cart.tamanho.name} (R$ ${cart.tamanho.price.toFixed(2)})</p>`;
+                cart.subtotal += cart.tamanho.price;
+                hasItems = true;
+            }
+
+            ['feijao', 'massa', 'legumes', 'outros', 'salada', 'proteina'].forEach(type => {
+                if(cart[type] && cart[type].length > 0) {
+                    let names = cart[type].map(i => {
+                        cart.subtotal += i.price;
+                        return i.price > 0 ? `${i.name} (+R$ ${i.price.toFixed(2)})` : i.name;
+                    }).join(', ');
+                    
+                    let exibicaoNome = type === 'feijao' ? 'Feijão' : type === 'proteina' ? 'Carne' : type.charAt(0).toUpperCase() + type.slice(1);
+                    cartItemsDiv.innerHTML += `<p><b>${exibicaoNome}:</b> ${names}</p>`;
+                    hasItems = true;
+                }
+            });
+
+            if(!hasItems) cartItemsDiv.innerHTML = '<p class="empty-cart">Selecione os itens ao lado para montar sua marmita.</p>';
+
+            document.getElementById('subtotal').innerText = `R$ ${cart.subtotal.toFixed(2)}`;
+            const tipoPedido = document.getElementById('c-tipo').value;
+            const taxa = tipoPedido === 'delivery' ? cart.taxaEntrega : 0;
+            
+            document.getElementById('delivery-fee').innerText = `R$ ${taxa.toFixed(2)}`;
+            document.getElementById('total').innerText = `R$ ${(cart.subtotal + taxa).toFixed(2)}`;
+        }
+
+        // 4. LISTENERS DE FORMULÁRIO (ENTREGA/REGIAO/PAGAMENTO)
+        document.getElementById('c-tipo').addEventListener('change', function() {
+            document.getElementById('box-regiao').style.display = this.value === 'retirada' ? 'none' : 'block';
+            document.getElementById('c-endereco').style.display = this.value === 'retirada' ? 'none' : 'block';
+            updateCart();
+        });
+
+        document.getElementById('c-regiao').addEventListener('change', function() {
+            cart.taxaEntrega = this.value === 'fora' ? 6.00 : 3.00;
+            updateCart();
+        });
+
+        document.getElementById('c-pagamento').addEventListener('change', function() {
+            document.getElementById('box-troco').style.display = this.value === 'Dinheiro' ? 'block' : 'none';
+        });
+
+        // 5. SALVAR PEDIDO NO SUPABASE E TRATAR PUSH ONLINE
+        document.getElementById('btn-finish').addEventListener('click', async () => {
+            if(!cart.tamanho) {
+                alert('Por favor, selecione ao menos o tamanho da marmita.');
+                return;
+            }
+
+            const nome = document.getElementById('c-nome').value;
+            const telefone = document.getElementById('c-telefone').value;
+            const endereco = document.getElementById('c-endereco').value;
+            const tipo = document.getElementById('c-tipo').value;
+            const regiao = document.getElementById('c-regiao').value;
+            const obs = document.getElementById('c-obs').value;
+            const pagamento = document.getElementById('c-pagamento').value;
+            const troco = document.getElementById('c-troco').value;
+
+            if(!nome || !telefone) { alert('Preencha seu nome e telefone.'); return; }
+            if(!pagamento) { alert('Selecione uma opção de pagamento.'); return; }
+
+            const btn = document.getElementById('btn-finish');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="icon">⏳</span> Processando pedido...';
+
+            let stringObs = `[Método: ${pagamento}] `;
+            if (pagamento === 'Dinheiro' && troco) stringObs += `[Troco para R$ ${troco}] `;
+            stringObs += obs;
+
+            // Transforma as escolhas estruturadas em uma lista simples de textos para salvar no JSONB do Supabase
+            let itensArray = [cart.tamanho.name];
+            ['feijao', 'massa', 'legumes', 'outros', 'salada', 'proteina'].forEach(cat => {
+                cart[cat].forEach(i => itensArray.push(i.name));
+            });
+
+            const codigoPedidoGerado = 'ORD-' + Date.now();
+            const taxaCalculada = tipo === 'delivery' ? cart.taxaEntrega : 0;
+            const totalGeral = cart.subtotal + taxaCalculada;
+
+            // Envia direto para a tabela do Supabase
+            const { error } = await sbClient.from('pedidos').insert([{
+                codigo: codigoPedidoGerado,
+                cliente_name: nome,
+                cliente_telefone: telefone,
+                itens: itensArray, // Salva como array JSONB puro
+                total: totalGeral,
+                status: 'Novo'
+            }]);
+
+            if (error) {
+                alert('Erro ao registrar o pedido no servidor: ' + error.message);
+                btn.disabled = false;
+                btn.innerHTML = '<span class="icon">💬</span> Finalizar Pedido';
+                return;
+            }
+
+            // Fluxo pós gravação
+            if (pagamento !== 'PIX') {
+                alert('Pedido registrado com sucesso!');
+                window.location.href = 'index.html?status=sucesso';
+                return;
+            }
+
+            // Tratamento integrado do Pix do Mercado Pago (via Cloud Functions/Backend Alternativo se configurado, ou Modal de fallback)
+            btn.disabled = false;
+            btn.innerHTML = '<span class="icon">💬</span> Finalizar Pedido';
+            
+            // Exemplo de fallback visual ou chamada para sua API MP externa:
+            // Chama a Netlify Function para gerar o QR Code Pix
+            fetch('/.netlify/functions/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ codigo_pedido: codigoPedidoGerado, nome, telefone, tipo, regiao, subtotal: cart.subtotal })
+            })
+            .then(r => r.json())
+            .then(dadosCheckout => {
+                btn.disabled = false;
+                btn.innerHTML = '<span class="icon">💬</span> Finalizar Pedido';
+                if (dadosCheckout.sucesso) {
+                    mostrarModalPix(dadosCheckout.pix_copia_e_cola, dadosCheckout.pix_qr_code_base64, codigoPedidoGerado);
+                } else {
+                    alert('Erro ao gerar o Pix: ' + dadosCheckout.erro);
+                }
+            })
+            .catch(() => { btn.disabled = false; btn.innerHTML = '<span class="icon">💬</span> Finalizar Pedido'; alert('Erro de conexão com o servidor Pix.'); });
+        });
+
+        function mostrarModalPix(codigoCopiaCola, imagemBase64, codigoPedido) {
+            let pixContainer = document.getElementById('pix-payment-area');
+            if (!pixContainer) {
+                pixContainer = document.createElement('div');
+                pixContainer.id = 'pix-payment-area';
+                pixContainer.style = "position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:#fff; padding:20px; border-radius:8px; box-shadow:0px 0px 15px rgba(0,0,0,0.3); z-index:1000; text-align:center; max-width:90%; width:350px;";
+                document.body.appendChild(pixContainer);
+
+                let fundo = document.createElement('div');
+                fundo.id = 'modal-fundo';
+                fundo.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999;";
+                document.body.appendChild(fundo);
+            }
+
+            pixContainer.innerHTML = `
+                <h3 style="margin-top:0; color:#00b159;">Pagamento via Pix</h3>
+                <p style="font-size: 0.9rem; margin-bottom: 10px;">Pedido: <b>${codigoPedido}</b></p>
+                <p>Escaneie o QR Code abaixo para pagar:</p>
+                <img src="data:image/jpeg;base64,${imagemBase64}" style="width:200px; height:200px; margin:10px auto; display:block;" alt="QR Code Pix" />
+                <p style="font-size:12px; color:#666;">Ou utilize o Pix Copia e Cola:</p>
+                <input type="text" id="input-copia-cola" value="${codigoCopiaCola}" readonly style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; text-align:center; margin-bottom:10px;" />
+                <button id="btn-copiar-pix" style="background:#00b159; color:#fff; border:none; padding:10px; width:100%; border-radius:4px; cursor:pointer; font-weight:bold;">Copiar Código Pix</button>
+                <hr style="margin:15px 0; border:0; border-top:1px solid #eee;">
+                <button id="btn-fechar-pix" style="background:#ccc; color:#333; border:none; padding:8px; width:100%; border-radius:4px; cursor:pointer;">Fechar e Voltar</button>
+            `;
+
+            document.getElementById('btn-copiar-pix').addEventListener('click', () => {
+                const inputCodigo = document.getElementById('input-copia-cola');
+                inputCodigo.select();
+                navigator.clipboard.writeText(inputCodigo.value);
+                const btnCopiar = document.getElementById('btn-copiar-pix');
+                btnCopiar.innerText = "¡Copiado!";
+                setTimeout(() => { btnCopiar.innerText = "Copiar Código Pix"; }, 2000);
+            });
+
+            document.getElementById('btn-fechar-pix').addEventListener('click', () => {
+                document.getElementById('pix-payment-area').remove();
+                document.getElementById('modal-fundo').remove();
+                window.location.href = 'index.html?status=sucesso';
+            });
+        }
+    </script>
+</body>
+</html>

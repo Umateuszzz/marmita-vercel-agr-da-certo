@@ -1,0 +1,421 @@
+/* =========================================
+   VARIÁVEIS DE TEMA (Identidade Visual)
+   ========================================= */
+:root {
+    --color-bg: #F9FAFB;
+    --color-white: #FFFFFF;
+    --color-primary: #FF8C69;
+    --color-primary-dark: #FF7043;
+    --color-text: #2F2F2F;
+    --color-text-muted: #6B7280;
+    
+    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    --shadow-md: 0 10px 15px -3px rgba(255, 112, 67, 0.2), 0 4px 6px -2px rgba(255, 112, 67, 0.05);
+    
+    --radius-md: 16px;
+    --radius-pill: 50px;
+    
+    --transition: all 0.25s ease-in-out;
+}
+
+/* =========================================
+   RESET GERAL E CONFIGURAÇÃO
+   ========================================= */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    line-height: 1.5;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* =========================================
+   HEADER / TOPO
+   ========================================= */
+header {
+    background-color: var(--color-white);
+    box-shadow: var(--shadow-sm);
+    padding: 20px 0;
+}
+
+.header-internal {
+    background-color: var(--color-white);
+    box-shadow: var(--shadow-sm);
+    padding: 15px 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--color-primary-dark);
+    letter-spacing: -0.5px;
+}
+
+.status.open {
+    color: #10B981;
+    font-weight: 700;
+}
+
+.badge-status {
+    background-color: #E6F4EA;
+    color: #137333;
+    padding: 6px 16px;
+    border-radius: var(--radius-pill);
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+/* =========================================
+   LANDING PAGE (index.php)
+   ========================================= */
+.hero {
+    background-color: var(--color-white);
+    padding: 80px 20px;
+    border-bottom-left-radius: 40px;
+    border-bottom-right-radius: 40px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 40px;
+}
+
+.hero-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 40px;
+}
+
+.hero-text {
+    flex: 1;
+}
+
+.hero-text h1 {
+    font-size: 3.5rem;
+    color: var(--color-text);
+    line-height: 1.15;
+    margin-bottom: 20px;
+    font-weight: 800;
+}
+
+.hero-text p {
+    font-size: 1.2rem;
+    color: var(--color-text-muted);
+    margin-bottom: 35px;
+    max-width: 520px;
+}
+
+.hero-image {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.image-placeholder {
+    width: 320px;
+    height: 320px;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 5.5rem;
+    box-shadow: var(--shadow-md);
+    animation: float 4s ease-in-out infinite;
+}
+
+/* Botão Faça Seu Pedido */
+.btn-pedido {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    color: var(--color-white);
+    font-size: 1.1rem;
+    font-weight: 700;
+    padding: 16px 45px;
+    border: none;
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    box-shadow: var(--shadow-md);
+    transition: var(--transition);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-pedido:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 20px rgba(255, 112, 67, 0.35);
+}
+
+/* =========================================
+   TELA DE MONTAGEM (montar.php)
+   ========================================= */
+.page-montar {
+    display: grid;
+    grid-template-columns: 1.7fr 1.3fr;
+    gap: 40px;
+    margin-top: 40px;
+    margin-bottom: 80px;
+}
+
+.section-title h2 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--color-text);
+    margin-bottom: 5px;
+}
+
+.section-title p {
+    color: var(--color-text-muted);
+    font-size: 1.05rem;
+}
+
+/* Blocos dos Passos */
+.step {
+    background: var(--color-white);
+    padding: 30px;
+    border-radius: var(--radius-md);
+    margin-top: 30px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid rgba(0,0,0,0.02);
+}
+
+.step h3 {
+    font-size: 1.25rem;
+    color: var(--color-text);
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 700;
+}
+
+.step-num {
+    background-color: var(--color-primary-dark);
+    color: var(--color-white);
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+/* Grade de Botões de Ingredientes */
+.options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 16px;
+}
+
+.item-btn * {
+    pointer-events: none;
+    background: var(--color-white);
+    border: 2px solid #E5E7EB;
+    padding: 24px 16px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 6px;
+}
+
+.item-icon {
+    font-size: 2.2rem;
+    margin-bottom: 4px;
+}
+
+.item-name {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--color-text);
+}
+
+.item-price {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    font-weight: 600;
+}
+
+.item-btn:hover {
+    border-color: var(--color-primary);
+    background-color: #FFF8F6;
+    transform: translateY(-2px);
+}
+
+.item-btn.selected {
+    border-color: var(--color-primary-dark);
+    background-color: #FFF2EE;
+    box-shadow: 0 4px 12px rgba(255, 112, 67, 0.12);
+}
+
+/* Lateral do Carrinho */
+.cart-card {
+    background: var(--color-white);
+    padding: 30px;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid rgba(0,0,0,0.02);
+    position: sticky;
+    top: 90px;
+}
+
+.cart-card h2 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--color-bg);
+}
+
+.empty-cart {
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+    text-align: center;
+    padding: 20px 0;
+}
+
+.cart-totals {
+    margin-top: 25px;
+    background-color: var(--color-bg);
+    padding: 20px;
+    border-radius: var(--radius-md);
+}
+
+.total-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 1rem;
+    color: var(--color-text-muted);
+}
+
+.total-row.highlight {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 2px dashed #E5E7EB;
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--color-primary-dark);
+}
+
+/* Campos de Input */
+.checkout-form {
+    margin-top: 30px;
+}
+
+.checkout-form h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    transition: var(--transition);
+    background-color: #F9FAFB;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    background-color: var(--color-white);
+    box-shadow: 0 0 0 3px rgba(255, 140, 105, 0.15);
+}
+
+textarea.form-input {
+    min-height: 90px;
+    resize: vertical;
+}
+
+/* Botão de Sucesso do WhatsApp */
+.btn-whatsapp {
+    width: 100%;
+    background: linear-gradient(135deg, #25D366, #128C7E);
+    color: white;
+    border: none;
+    padding: 18px;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-whatsapp:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(37, 211, 102, 0.3);
+}
+
+/* =========================================
+   ANIMAÇÕES E RESPONSIVIDADE
+   ========================================= */
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-12px); }
+    100% { transform: translateY(0px); }
+}
+
+@media (max-width: 992px) {
+    .page-montar {
+        grid-template-columns: 1fr;
+    }
+    .cart-card {
+        position: relative;
+        top: 0;
+    }
+    .hero-container {
+        flex-direction: column;
+        text-align: center;
+    }
+    .hero-text h1 {
+        font-size: 2.5rem;
+    }
+    .hero-text p {
+        margin: 0 auto 30px auto;
+    }
+    .image-placeholder {
+        width: 240px;
+        height: 240px;
+        font-size: 4rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .options-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
