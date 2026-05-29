@@ -192,8 +192,8 @@
 
     <script>
         // CONFIGURAÇÃO DO SUPABASE (Substitua pelas suas chaves reais)
-        const SUPABASE_URL = "https://qmrrdiwmaakculmpwgi.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtcnJkaXdtYWFrY3VsbG1wd2dpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3ODgwNTUsImV4cCI6MjA5NTM2NDA1NX0.6nSW2ybFroPWlly6mmwwsbe1ym-hqdfe42PZy0a_MnQ";
+        const SUPABASE_URL = "https://saruqsgujswkqznizqvw.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhcnVxc2d1anN3a3F6bml6cXZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwMDE4MTMsImV4cCI6MjA5NTU3NzgxM30.ty1MlDwCWzTz28NAivTOJXknxWJRfzd0zpwp5RULLo8";
         
         const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -755,7 +755,9 @@
                 }
             })
             .catch(() => { btn.disabled = false; btn.innerHTML = '<span class="icon">💬</span> Finalizar Pedido'; alert('Erro de conexão com o servidor Pix.'); });
-        });
+
+        
+
 
         function mostrarModalPix(codigoCopiaCola, imagemBase64, codigoPedido) {
             let pixContainer = document.getElementById('pix-payment-area');
@@ -782,7 +784,7 @@
                 <hr style="margin:15px 0; border:0; border-top:1px solid #eee;">
                 <button id="btn-fechar-pix" style="background:#ccc; color:#333; border:none; padding:8px; width:100%; border-radius:4px; cursor:pointer;">Fechar e Voltar</button>
             `;
-            `;
+
             document.getElementById('btn-copiar-pix').addEventListener('click', () => {
                 const inputCodigo = document.getElementById('input-copia-cola');
                 inputCodigo.select();
