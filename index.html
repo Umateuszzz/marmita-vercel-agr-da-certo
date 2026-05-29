@@ -192,7 +192,7 @@
 
     <script>
         // CONFIGURAÇÃO DO SUPABASE (Substitua pelas suas chaves reais)
-        const SUPABASE_URL = "https://saruqsgujswkqznizqvw.supabase.co";
+        const SUPABASE_URL = "https://qmrrdiwmaakculmpwgi.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtcnJkaXdtYWFrY3VsbG1wd2dpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3ODgwNTUsImV4cCI6MjA5NTM2NDA1NX0.6nSW2ybFroPWlly6mmwwsbe1ym-hqdfe42PZy0a_MnQ";
         
         const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -373,6 +373,7 @@
 
         // 5. SALVAR PEDIDO NO SUPABASE E TRATAR PUSH ONLINE
         document.getElementById('btn-finish').addEventListener('click', async () => {
+
 
     if(!cart.tamanho){
         alert('Por favor, selecione ao menos o tamanho da marmita.')
@@ -672,6 +673,131 @@
     }
 
 })
+
+            if(!cart.tamanho) {
+                alert('Por favor, selecione ao menos o tamanho da marmita.');
+                return;
+            }
+
+            const nome = document.getElementById('c-nome').value;
+            const telefone = document.getElementById('c-telefone').value;
+            const endereco = document.getElementById('c-endereco').value;
+            const tipo = document.getElementById('c-tipo').value;
+            const regiao = document.getElementById('c-regiao').value;
+            const obs = document.getElementById('c-obs').value;
+            const pagamento = document.getElementById('c-pagamento').value;
+            const troco = document.getElementById('c-troco').value;
+
+            if(!nome || !telefone) { alert('Preencha seu nome e telefone.'); return; }
+            if(!pagamento) { alert('Selecione uma opção de pagamento.'); return; }
+
+            const btn = document.getElementById('btn-finish');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="icon">⏳</span> Processando pedido...';
+
+            let stringObs = `[Método: ${pagamento}] `;
+            if (pagamento === 'Dinheiro' && troco) stringObs += `[Troco para R$ ${troco}] `;
+            stringObs += obs;
+
+            // Transforma as escolhas estruturadas em uma lista simples de textos para salvar no JSONB do Supabase
+            let itensArray = [cart.tamanho.name];
+            ['feijao', 'massa', 'legumes', 'outros', 'salada', 'proteina'].forEach(cat => {
+                cart[cat].forEach(i => itensArray.push(i.name));
+            });
+
+            const codigoPedidoGerado = 'ORD-' + Date.now();
+            const taxaCalculada = tipo === 'delivery' ? cart.taxaEntrega : 0;
+            const totalGeral = cart.subtotal + taxaCalculada;
+
+            // Envia direto para a tabela do Supabase
+            const { error } = await sbClient.from('pedidos').insert([{
+                codigo: codigoPedidoGerado,
+                cliente_name: nome,
+                cliente_telefone: telefone,
+                itens: itensArray, // Salva como array JSONB puro
+                total: totalGeral,
+                status: 'Novo'
+            }]);
+
+            if (error) {
+                alert('Erro ao registrar o pedido no servidor: ' + error.message);
+                btn.disabled = false;
+                btn.innerHTML = '<span class="icon">💬</span> Finalizar Pedido';
+                return;
+            }
+
+            // Fluxo pós gravação
+            if (pagamento !== 'PIX') {
+                alert('Pedido registrado com sucesso!');
+                window.location.href = 'index.html?status=sucesso';
+                return;
+            }
+
+            // Tratamento integrado do Pix do Mercado Pago (via Cloud Functions/Backend Alternativo se configurado, ou Modal de fallback)
+            btn.disabled = false;
+            btn.innerHTML = '<span class="icon">💬</span> Finalizar Pedido';
+            
+            // Exemplo de fallback visual ou chamada para sua API MP externa:
+            // Chama a Netlify Function para gerar o QR Code Pix
+            fetch('/.netlify/functions/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ codigo_pedido: codigoPedidoGerado, nome, telefone, tipo, regiao, subtotal: cart.subtotal })
+            })
+            .then(r => r.json())
+            .then(dadosCheckout => {
+                btn.disabled = false;
+                btn.innerHTML = '<span class="icon">💬</span> Finalizar Pedido';
+                if (dadosCheckout.sucesso) {
+                    mostrarModalPix(dadosCheckout.pix_copia_e_cola, dadosCheckout.pix_qr_code_base64, codigoPedidoGerado);
+                } else {
+                    alert('Erro ao gerar o Pix: ' + dadosCheckout.erro);
+                }
+            })
+            .catch(() => { btn.disabled = false; btn.innerHTML = '<span class="icon">💬</span> Finalizar Pedido'; alert('Erro de conexão com o servidor Pix.'); });
+        });
+
+        function mostrarModalPix(codigoCopiaCola, imagemBase64, codigoPedido) {
+            let pixContainer = document.getElementById('pix-payment-area');
+            if (!pixContainer) {
+                pixContainer = document.createElement('div');
+                pixContainer.id = 'pix-payment-area';
+                pixContainer.style = "position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:#fff; padding:20px; border-radius:8px; box-shadow:0px 0px 15px rgba(0,0,0,0.3); z-index:1000; text-align:center; max-width:90%; width:350px;";
+                document.body.appendChild(pixContainer);
+
+                let fundo = document.createElement('div');
+                fundo.id = 'modal-fundo';
+                fundo.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999;";
+                document.body.appendChild(fundo);
+            }
+
+            pixContainer.innerHTML = `
+                <h3 style="margin-top:0; color:#00b159;">Pagamento via Pix</h3>
+                <p style="font-size: 0.9rem; margin-bottom: 10px;">Pedido: <b>${codigoPedido}</b></p>
+                <p>Escaneie o QR Code abaixo para pagar:</p>
+                <img src="data:image/jpeg;base64,${imagemBase64}" style="width:200px; height:200px; margin:10px auto; display:block;" alt="QR Code Pix" />
+                <p style="font-size:12px; color:#666;">Ou utilize o Pix Copia e Cola:</p>
+                <input type="text" id="input-copia-cola" value="${codigoCopiaCola}" readonly style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; text-align:center; margin-bottom:10px;" />
+                <button id="btn-copiar-pix" style="background:#00b159; color:#fff; border:none; padding:10px; width:100%; border-radius:4px; cursor:pointer; font-weight:bold;">Copiar Código Pix</button>
+                <hr style="margin:15px 0; border:0; border-top:1px solid #eee;">
+                <button id="btn-fechar-pix" style="background:#ccc; color:#333; border:none; padding:8px; width:100%; border-radius:4px; cursor:pointer;">Fechar e Voltar</button>
+            `;
+            `;
+            document.getElementById('btn-copiar-pix').addEventListener('click', () => {
+                const inputCodigo = document.getElementById('input-copia-cola');
+                inputCodigo.select();
+                navigator.clipboard.writeText(inputCodigo.value);
+                const btnCopiar = document.getElementById('btn-copiar-pix');
+                btnCopiar.innerText = "Copiado!";
+                setTimeout(() => { btnCopiar.innerText = "Copiar Código Pix"; }, 2000);
+            });
+
+            document.getElementById('btn-fechar-pix').addEventListener('click', () => {
+                document.getElementById('pix-payment-area').remove();
+                document.getElementById('modal-fundo').remove();
+                window.location.href = 'index.html?status=sucesso';
+            });
+        }
     </script>
 </body>
 </html>
