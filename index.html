@@ -121,12 +121,23 @@ button{background:#25d366;color:white;border:none;font-weight:bold;cursor:pointe
 <script>
 
 const SUPABASE_URL="https://saruqsgujswkqznizqvw.supabase.co"
-const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhcnVxc2d1anN3a3F6bml6cXZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwMDE4MTMsImV4cCI6MjA5NTU3NzgxM30.ty1MlDwCWzTz28NAivTOJXknxWJRfzd0zpwp5RULLo8"
 
-const sb=supabase.createClient(
+const SUPABASE_ANON_KEY="SUA_ANON_KEY"
+
+const sbClient=supabase.createClient(
 SUPABASE_URL,
 SUPABASE_ANON_KEY
 )
+
+const icones={
+tamanho:'🍱',
+feijao:'🫘',
+massa:'🍝',
+legumes:'🥦',
+outros:'🍿',
+salada:'🥗',
+proteina:'🥩'
+}
 
 const LIMITES={
 tamanho:1,
@@ -139,60 +150,110 @@ proteina:1
 }
 
 const cart={
-subtotal:0,
-taxa:3,
-tamanho:[],
+tamanho:null,
 feijao:[],
 massa:[],
 legumes:[],
 outros:[],
 salada:[],
-proteina:[]
+proteina:[],
+subtotal:0,
+taxaEntrega:3
 }
 
 window.addEventListener(
-"DOMContentLoaded",
-carregar
+'DOMContentLoaded',
+carregarProdutos
 )
 
-async function carregar(){
+async function carregarProdutos(){
 
-const {data,error}=await sb
-.from("produtos")
-.select("*")
-.order("id")
+const grids=[
+'tamanho',
+'feijao',
+'massa',
+'legumes',
+'outros',
+'salada',
+'proteina'
+]
+
+const {data,error}=await sbClient
+
+.from('produtos')
+
+.select('*')
+
+.order('id')
 
 if(error){
-alert(error.message)
+
+console.log(error)
+
+alert(
+'Erro carregando produtos'
+)
+
 return
+
 }
 
 data.forEach(item=>{
 
 const grid=document.getElementById(
-"grid-"+item.categoria
+`grid-${item.categoria}`
 )
 
 if(!grid)return
 
 const btn=document.createElement(
-"button"
+'button'
 )
 
-btn.className="item-btn"
+btn.type='button'
 
-btn.innerHTML=
-item.nome+
-
-(item.preco>0?
-"<br>+R$ "+Number(item.preco).toFixed(2)
-:"")
+btn.className='item-btn'
 
 btn.dataset.type=item.categoria
+
 btn.dataset.name=item.nome
+
 btn.dataset.price=item.preco
 
-btn.onclick=()=>selecionar(btn)
+btn.innerHTML=`
+
+<span class="item-icon">
+
+${icones[item.categoria]||'🍛'}
+
+</span>
+
+<span class="item-name">
+
+${item.nome}
+
+</span>
+
+${item.preco>0?
+
+`<span class="item-price">
+
++R$ ${Number(item.preco)
+
+.toFixed(2)
+
+.replace('.',',')}
+
+</span>`
+
+:''}
+
+`
+
+btn.addEventListener(
+'click',
+selecionarItem
+)
 
 grid.appendChild(btn)
 
@@ -200,141 +261,339 @@ grid.appendChild(btn)
 
 }
 
-function selecionar(btn){
+function selecionarItem(e){
+
+const btn=e.currentTarget
 
 const type=btn.dataset.type
+
 const name=btn.dataset.name
-const price=Number(btn.dataset.price)
 
-const lista=cart[type]
+const price=Number(
+btn.dataset.price
+)
 
-const idx=lista.findIndex(
+if(type==='tamanho'){
+
+document
+
+.querySelectorAll(
+
+'.item-btn[data-type="tamanho"]'
+
+)
+
+.forEach(b=>
+
+b.classList.remove(
+'selected'
+)
+
+)
+
+btn.classList.add(
+'selected'
+)
+
+cart.tamanho={
+name,
+price
+}
+
+updateCart()
+
+return
+
+}
+
+const idx=
+cart[type].findIndex(
 x=>x.name===name
 )
 
 if(idx>-1){
 
-lista.splice(idx,1)
-btn.classList.remove("selected")
+cart[type].splice(
+idx,
+1
+)
+
+btn.classList.remove(
+'selected'
+)
 
 }else{
 
-if(lista.length>=LIMITES[type]){
+if(
+LIMITES[type]===1
+){
 
-document.querySelectorAll(
+document
+
+.querySelectorAll(
 `.item-btn[data-type="${type}"]`
-).forEach(x=>{
+)
 
-if(LIMITES[type]===1){
+.forEach(b=>
 
-x.classList.remove("selected")
+b.classList.remove(
+'selected'
+)
 
-}
-
-})
-
-if(LIMITES[type]===1){
+)
 
 cart[type]=[]
 
 }
 
-if(cart[type].length>=LIMITES[type]){
-alert("Limite atingido")
+if(
+cart[type].length>=LIMITES[type]
+){
+
+alert(
+`Máximo ${LIMITES[type]}`
+)
+
 return
-}
 
 }
 
 cart[type].push({
-name,price
+name,
+price
 })
 
-btn.classList.add("selected")
-
-}
-
-atualizar()
-
-}
-
-function atualizar(){
-
-const div=document.getElementById(
-"cart-items"
+btn.classList.add(
+'selected'
 )
+
+}
+
+updateCart()
+
+}
+
+function updateCart(){
+
+const div=
+document.getElementById(
+'cart-items'
+)
+
+div.innerHTML=''
 
 cart.subtotal=0
 
-let html=""
+if(cart.tamanho){
 
-Object.keys(cart).forEach(k=>{
+div.innerHTML+=`
 
-if(!Array.isArray(cart[k]))return
+<p>
 
-cart[k].forEach(i=>{
+<b>Tamanho:</b>
 
-cart.subtotal+=i.price
+${cart.tamanho.name}
 
-html+=i.name+"<br>"
+</p>
+
+`
+
+cart.subtotal+=
+cart.tamanho.price
+
+}
+
+const cats=[
+'feijao',
+'massa',
+'legumes',
+'outros',
+'salada',
+'proteina'
+]
+
+cats.forEach(cat=>{
+
+if(
+cart[cat].length===0
+)return
+
+div.innerHTML+=`
+
+<p>
+
+<b>${cat}</b>
+
+:
+
+${cart[cat]
+
+.map(i=>{
+
+cart.subtotal+=
+i.price
+
+return i.name
 
 })
 
+.join(', ')}
+
+</p>
+
+`
+
 })
 
-div.innerHTML=html||"Nenhum item."
+if(div.innerHTML===''){
+
+div.innerHTML=
+
+'<p class="empty-cart">Selecione itens.</p>'
+
+}
 
 const taxa=
-document.getElementById(
-"c-tipo"
-).value==="delivery"
-
-?cart.taxa:0
 
 document.getElementById(
-"subtotal"
+'c-tipo'
+).value==='delivery'
+
+?cart.taxaEntrega
+
+:0
+
+document.getElementById(
+'subtotal'
 ).innerText=
-"R$ "+cart.subtotal.toFixed(2)
+
+`R$ ${cart.subtotal
+.toFixed(2)
+.replace('.',',')}`
 
 document.getElementById(
-"delivery-fee"
+'delivery-fee'
 ).innerText=
-"R$ "+taxa.toFixed(2)
+
+`R$ ${taxa
+.toFixed(2)
+.replace('.',',')}`
 
 document.getElementById(
-"total"
+'total'
 ).innerText=
-"R$ "+(cart.subtotal+taxa).toFixed(2)
+
+`R$ ${(cart.subtotal+taxa)
+.toFixed(2)
+.replace('.',',')}`
 
 }
 
 document.getElementById(
-"c-regiao"
-).onchange=function(){
+'c-regiao'
+)
 
-cart.taxa=
-this.value==="fora"
-?6:3
+.addEventListener(
+'change',
+function(){
 
-atualizar()
+cart.taxaEntrega=
+
+this.value==='fora'
+
+?6
+
+:3
+
+updateCart()
 
 }
+)
 
 document.getElementById(
-"btn-finish"
-).onclick=finalizar
+'c-tipo'
+)
 
-async function finalizar(){
+.addEventListener(
+'change',
+updateCart
+)
+
+document.getElementById(
+'btn-finish'
+)
+
+.addEventListener(
+'click',
+finalizarPedido
+)
+
+async function finalizarPedido(){
+
+if(!cart.tamanho){
+
+alert(
+'Escolha tamanho'
+)
+
+return
+
+}
 
 const nome=
-document.getElementById("c-nome").value
+document.getElementById(
+'c-nome'
+).value
 
-const tel=
-document.getElementById("c-telefone").value
+const telefone=
+document.getElementById(
+'c-telefone'
+).value
 
-if(!nome||!tel){
+const pagamento=
+document.getElementById(
+'c-pagamento'
+).value
 
-alert("Preencha nome e telefone")
+const tipo=
+document.getElementById(
+'c-tipo'
+).value
+
+const endereco=
+document.getElementById(
+'c-endereco'
+).value
+
+if(!nome||!telefone){
+
+alert(
+'Preencha nome e telefone'
+)
+
+return
+
+}
+
+if(
+tipo==='delivery'
+&&
+!endereco
+){
+
+alert(
+'Digite endereço'
+)
+
+return
+
+}
+
+if(!pagamento){
+
+alert(
+'Selecione pagamento'
+)
 
 return
 
@@ -342,12 +601,30 @@ return
 
 const itens=[]
 
-Object.keys(cart).forEach(k=>{
+if(cart.tamanho)
+itens.push(
+cart.tamanho.name
+)
 
-if(Array.isArray(cart[k])){
+Object.keys(cart)
 
-cart[k].forEach(i=>
-itens.push(i.name)
+.forEach(k=>{
+
+if(
+Array.isArray(
+cart[k]
+)
+
+){
+
+cart[k]
+
+.forEach(i=>
+
+itens.push(
+i.name
+)
+
 )
 
 }
@@ -355,46 +632,61 @@ itens.push(i.name)
 })
 
 const total=
+
 cart.subtotal+
 
 (
-document.getElementById("c-tipo").value==="delivery"
-?cart.taxa
+
+tipo==='delivery'
+
+?cart.taxaEntrega
+
 :0
+
 )
 
 const codigo=
-"ORD-"+Date.now()
+'ORD-'+Date.now()
 
-const {error}=await sb
-.from("pedidos")
+const {error}=
+
+await sbClient
+
+.from('pedidos')
+
 .insert([{
 
 codigo,
 
 cliente_name:nome,
 
-cliente_telefone:tel,
+cliente_telefone:
+telefone,
 
 itens,
 
 total,
 
-status:"pendente"
+status:'pendente'
 
 }])
 
 if(error){
 
-alert(error.message)
+alert(
+error.message
+)
 
 return
 
 }
 
-alert("Pedido enviado!")
+alert(
+'Pedido enviado!'
+)
 
-location.reload()
+window.location.href=
+'index.html'
 
 }
 
