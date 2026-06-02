@@ -120,8 +120,7 @@ button{background:#25d366;color:white;border:none;font-weight:bold;cursor:pointe
 
 <script>
 
-const SUPABASE_URL="https://saruqsgujswkqznizqvw.supabase.co"
-
+const SUPABASE_URL="SUA_URL_SUPABASE"
 const SUPABASE_ANON_KEY="SUA_ANON_KEY"
 
 const sbClient=supabase.createClient(
@@ -130,69 +129,90 @@ SUPABASE_ANON_KEY
 )
 
 const icones={
-tamanho:'🍱',
-feijao:'🫘',
-massa:'🍝',
-legumes:'🥦',
-outros:'🍿',
-salada:'🥗',
-proteina:'🥩'
+
+tamanho:"🍱",
+
+feijao:"🫘",
+
+massa:"🍝",
+
+legumes:"🥦",
+
+outros:"🍟",
+
+salada:"🥗",
+
+proteina:"🍖"
+
 }
 
 const LIMITES={
+
 tamanho:1,
+
 feijao:1,
+
 massa:1,
+
 legumes:1,
+
 outros:2,
+
 salada:2,
+
 proteina:1
+
 }
 
 const cart={
+
 tamanho:null,
+
 feijao:[],
+
 massa:[],
+
 legumes:[],
+
 outros:[],
+
 salada:[],
+
 proteina:[],
+
 subtotal:0,
+
 taxaEntrega:3
+
 }
 
 window.addEventListener(
-'DOMContentLoaded',
+
+"DOMContentLoaded",
+
 carregarProdutos
+
 )
 
 async function carregarProdutos(){
 
-const grids=[
-'tamanho',
-'feijao',
-'massa',
-'legumes',
-'outros',
-'salada',
-'proteina'
-]
+const {data,error}=
 
-const {data,error}=await sbClient
+await sbClient
 
-.from('produtos')
+.from("produtos")
 
-.select('*')
+.select("*")
 
-.order('id')
+.order("id")
 
 if(error){
 
-console.log(error)
-
 alert(
-'Erro carregando produtos'
+"Erro carregando cardápio"
 )
+
+console.log(error)
 
 return
 
@@ -200,60 +220,83 @@ return
 
 data.forEach(item=>{
 
-const grid=document.getElementById(
+const grid=
+
+document.getElementById(
+
 `grid-${item.categoria}`
+
 )
 
 if(!grid)return
 
-const btn=document.createElement(
-'button'
+const btn=
+
+document.createElement(
+
+"button"
+
 )
 
-btn.type='button'
+btn.className=
 
-btn.className='item-btn'
+"item-btn"
 
-btn.dataset.type=item.categoria
+btn.dataset.type=
 
-btn.dataset.name=item.nome
+item.categoria
 
-btn.dataset.price=item.preco
+btn.dataset.name=
+
+item.nome
+
+btn.dataset.price=
+
+item.preco
 
 btn.innerHTML=`
 
-<span class="item-icon">
+<div class="emoji">
 
-${icones[item.categoria]||'🍛'}
+${icones[item.categoria]}
 
-</span>
+</div>
 
-<span class="item-name">
+<div class="nome">
 
 ${item.nome}
 
-</span>
+</div>
 
-${item.preco>0?
+<div class="preco">
 
-`<span class="item-price">
+${item.preco>0
 
-+R$ ${Number(item.preco)
+?
 
-.toFixed(2)
+"+ R$ "+Number(
 
-.replace('.',',')}
+item.preco
 
-</span>`
+).toFixed(2)
 
-:''}
+.replace(".",",")
+
+:
+
+""
+
+}
+
+</div>
 
 `
 
-btn.addEventListener(
-'click',
-selecionarItem
-)
+btn.onclick=()=>{
+
+selecionarItem(btn)
+
+}
 
 grid.appendChild(btn)
 
@@ -261,19 +304,25 @@ grid.appendChild(btn)
 
 }
 
-function selecionarItem(e){
+function selecionarItem(btn){
 
-const btn=e.currentTarget
+const type=
 
-const type=btn.dataset.type
+btn.dataset.type
 
-const name=btn.dataset.name
+const name=
 
-const price=Number(
+btn.dataset.name
+
+const price=
+
+Number(
+
 btn.dataset.price
+
 )
 
-if(type==='tamanho'){
+if(type==="tamanho"){
 
 document
 
@@ -286,19 +335,26 @@ document
 .forEach(b=>
 
 b.classList.remove(
-'selected'
-)
+
+"selected"
 
 )
 
-btn.classList.add(
-'selected'
 )
 
 cart.tamanho={
+
 name,
+
 price
+
 }
+
+btn.classList.add(
+
+"selected"
+
+)
 
 updateCart()
 
@@ -306,38 +362,60 @@ return
 
 }
 
-const idx=
-cart[type].findIndex(
-x=>x.name===name
+const existe=
+
+cart[type]
+
+.findIndex(
+
+i=>i.name===name
+
 )
 
-if(idx>-1){
+if(
 
-cart[type].splice(
-idx,
+existe>-1
+
+){
+
+cart[type]
+
+.splice(
+
+existe,
+
 1
+
 )
 
 btn.classList.remove(
-'selected'
+
+"selected"
+
 )
 
 }else{
 
 if(
+
 LIMITES[type]===1
+
 ){
 
 document
 
 .querySelectorAll(
+
 `.item-btn[data-type="${type}"]`
+
 )
 
-.forEach(b=>
+.forEach(
 
-b.classList.remove(
-'selected'
+b=>b.classList.remove(
+
+"selected"
+
 )
 
 )
@@ -347,11 +425,15 @@ cart[type]=[]
 }
 
 if(
+
 cart[type].length>=LIMITES[type]
+
 ){
 
 alert(
+
 `Máximo ${LIMITES[type]}`
+
 )
 
 return
@@ -359,12 +441,17 @@ return
 }
 
 cart[type].push({
+
 name,
+
 price
+
 })
 
 btn.classList.add(
-'selected'
+
+"selected"
+
 )
 
 }
@@ -376,21 +463,28 @@ updateCart()
 function updateCart(){
 
 const div=
+
 document.getElementById(
-'cart-items'
+
+"cart-items"
+
 )
 
-div.innerHTML=''
+div.innerHTML=""
 
 cart.subtotal=0
 
-if(cart.tamanho){
+if(
+
+cart.tamanho
+
+){
 
 div.innerHTML+=`
 
 <p>
 
-<b>Tamanho:</b>
+🍱
 
 ${cart.tamanho.name}
 
@@ -399,107 +493,144 @@ ${cart.tamanho.name}
 `
 
 cart.subtotal+=
+
 cart.tamanho.price
 
 }
 
-const cats=[
-'feijao',
-'massa',
-'legumes',
-'outros',
-'salada',
-'proteina'
+const categorias=[
+
+"feijao",
+
+"massa",
+
+"legumes",
+
+"outros",
+
+"salada",
+
+"proteina"
+
 ]
 
-cats.forEach(cat=>{
+categorias.forEach(cat=>{
 
-if(
-cart[cat].length===0
-)return
+cart[cat]
+
+.forEach(item=>{
 
 div.innerHTML+=`
 
 <p>
 
-<b>${cat}</b>
+${icones[cat]}
 
-:
-
-${cart[cat]
-
-.map(i=>{
-
-cart.subtotal+=
-i.price
-
-return i.name
-
-})
-
-.join(', ')}
+${item.name}
 
 </p>
 
 `
 
+cart.subtotal+=
+
+item.price
+
 })
 
-if(div.innerHTML===''){
+})
+
+if(
+
+div.innerHTML===""
+
+){
 
 div.innerHTML=
 
-'<p class="empty-cart">Selecione itens.</p>'
+"<p>Nenhum item</p>"
 
 }
 
 const taxa=
 
-document.getElementById(
-'c-tipo'
-).value==='delivery'
+document
 
-?cart.taxaEntrega
+.getElementById(
+
+"c-tipo"
+
+).value
+
+==="delivery"
+
+?
+
+cart.taxaEntrega
 
 :0
 
-document.getElementById(
-'subtotal'
+document
+
+.getElementById(
+
+"subtotal"
+
 ).innerText=
 
 `R$ ${cart.subtotal
-.toFixed(2)
-.replace('.',',')}`
 
-document.getElementById(
-'delivery-fee'
+.toFixed(2)
+
+.replace(".",",")}`
+
+document
+
+.getElementById(
+
+"delivery-fee"
+
 ).innerText=
 
 `R$ ${taxa
-.toFixed(2)
-.replace('.',',')}`
 
-document.getElementById(
-'total'
+.toFixed(2)
+
+.replace(".",",")}`
+
+document
+
+.getElementById(
+
+"total"
+
 ).innerText=
 
 `R$ ${(cart.subtotal+taxa)
+
 .toFixed(2)
-.replace('.',',')}`
+
+.replace(".",",")}`
 
 }
 
-document.getElementById(
-'c-regiao'
+document
+
+.getElementById(
+
+"c-regiao"
+
 )
 
 .addEventListener(
-'change',
+
+"change",
+
 function(){
 
 cart.taxaEntrega=
 
-this.value==='fora'
+this.value==="fora"
 
 ?6
 
@@ -508,32 +639,53 @@ this.value==='fora'
 updateCart()
 
 }
+
 )
 
-document.getElementById(
-'c-tipo'
+document
+
+.getElementById(
+
+"c-tipo"
+
 )
 
 .addEventListener(
-'change',
+
+"change",
+
 updateCart
+
 )
 
-document.getElementById(
-'btn-finish'
+document
+
+.getElementById(
+
+"btn-finish"
+
 )
 
 .addEventListener(
-'click',
+
+"click",
+
 finalizarPedido
+
 )
 
 async function finalizarPedido(){
 
-if(!cart.tamanho){
+if(
+
+!cart.tamanho
+
+){
 
 alert(
-'Escolha tamanho'
+
+"Escolha tamanho"
+
 )
 
 return
@@ -541,34 +693,41 @@ return
 }
 
 const nome=
+
 document.getElementById(
-'c-nome'
+
+"c-nome"
+
 ).value
 
 const telefone=
+
 document.getElementById(
-'c-telefone'
+
+"c-telefone"
+
 ).value
 
 const pagamento=
+
 document.getElementById(
-'c-pagamento'
+
+"c-pagamento"
+
 ).value
 
-const tipo=
-document.getElementById(
-'c-tipo'
-).value
+if(
 
-const endereco=
-document.getElementById(
-'c-endereco'
-).value
+!nome||
 
-if(!nome||!telefone){
+!telefone
+
+){
 
 alert(
-'Preencha nome e telefone'
+
+"Preencha nome e telefone"
+
 )
 
 return
@@ -576,23 +735,15 @@ return
 }
 
 if(
-tipo==='delivery'
-&&
-!endereco
+
+!pagamento
+
 ){
 
 alert(
-'Digite endereço'
-)
 
-return
+"Selecione pagamento"
 
-}
-
-if(!pagamento){
-
-alert(
-'Selecione pagamento'
 )
 
 return
@@ -601,28 +752,42 @@ return
 
 const itens=[]
 
-if(cart.tamanho)
+if(
+
+cart.tamanho
+
+){
+
 itens.push(
+
 cart.tamanho.name
+
 )
+
+}
 
 Object.keys(cart)
 
-.forEach(k=>{
+.forEach(key=>{
 
 if(
+
 Array.isArray(
-cart[k]
+
+cart[key]
+
 )
 
 ){
 
-cart[k]
+cart[key]
 
 .forEach(i=>
 
 itens.push(
+
 i.name
+
 )
 
 )
@@ -631,28 +796,43 @@ i.name
 
 })
 
+const codigo=
+
+"ORD-"+Date.now()
+
 const total=
 
 cart.subtotal+
 
 (
 
-tipo==='delivery'
+document
 
-?cart.taxaEntrega
+.getElementById(
+
+"c-tipo"
+
+).value
+
+==="delivery"
+
+?
+
+cart.taxaEntrega
 
 :0
 
 )
 
-const codigo=
-'ORD-'+Date.now()
-
 const {error}=
 
 await sbClient
 
-.from('pedidos')
+.from(
+
+"pedidos"
+
+)
 
 .insert([{
 
@@ -661,20 +841,25 @@ codigo,
 cliente_name:nome,
 
 cliente_telefone:
+
 telefone,
 
 itens,
 
 total,
 
-status:'pendente'
+status:
+
+"pendente"
 
 }])
 
 if(error){
 
 alert(
+
 error.message
+
 )
 
 return
@@ -682,11 +867,14 @@ return
 }
 
 alert(
-'Pedido enviado!'
+
+"Pedido enviado!"
+
 )
 
 window.location.href=
-'index.html'
+
+"index.html"
 
 }
 
